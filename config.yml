@@ -1,0 +1,16 @@
+dev_mode: false
+tls:
+  enabled: false
+  key:     "foo"
+  cert:    "bar"
+
+cors:
+  origins:
+    - http://localhost
+  headers:
+    - "*"
+  methods:
+    - GET
+    - POST
+    - PUT
+    - OPTIONS
