@@ -1,11 +1,14 @@
-package main
+package api
 
 const (
-	ReleaseName = "elliot"
-	Version     = "0.0.1"
-	EmptyString = ""
+	ReleaseName       = "elliot"
+	Version           = "0.0.1"
+	CurrentAPIVersion = APIVersion(1)
 
-	DefaultNodeName = "Payment API"
+	APIV1ContentTypes = "application/json,application/json+v1"
+	APIV1Prefix       = "/v1"
+
+	DefaultNodeName = "Document API"
 	DefaultHost     = "127.0.0.1"
 	DefaultPort     = "8080"
 	DefaultDevMode  = true
@@ -26,5 +29,5 @@ const (
 	ConfigKeyDevMode     = "dev_mode"
 	ConfigKeyNodeName    = "name"
 
-	PaymentIDPrefix = "payment_id"
+	DocumentIDPrefix = "payment_id"
 )

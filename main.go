@@ -1,16 +1,16 @@
 package main
 
 import (
+	"github.com/ganitzsh/f3-te/api"
 	"github.com/sirupsen/logrus"
 )
 
 func init() {
-	initConfig()
+	api.InitConfig()
 }
 
 func main() {
-	api := NewPaymentAPI()
 	if err := api.Start(); err != nil {
-		logrus.Fatal(err)
+		logrus.Fatalf("Could not run the server: %v", err)
 	}
 }

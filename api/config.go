@@ -1,10 +1,24 @@
-package main
+package api
 
 import (
 	"fmt"
 
 	"github.com/spf13/viper"
 )
+
+type CORSSettings struct {
+	AllowedOrigins []string `json:"allowed_origins"`
+	AllowedMethods []string `json:"allowed_methods"`
+	AllowedHeaders []string `json:"allowed_headers"`
+}
+
+func NewCORSSettings() *CORSSettings {
+	return &CORSSettings{
+		AllowedHeaders: viper.GetStringSlice(ConfigKeyCORSHeaders),
+		AllowedMethods: viper.GetStringSlice(ConfigKeyCORSMethods),
+		AllowedOrigins: viper.GetStringSlice(ConfigKeyCORSOrigins),
+	}
+}
 
 type APIConfig struct {
 	NodeName string        `json:"node_name"`
