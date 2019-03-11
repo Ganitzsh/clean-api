@@ -32,3 +32,7 @@ func InitConfig() {
 	viper.SetDefault(ConfigKeyCORSOrigins, []string{"*"})
 	viper.AutomaticEnv()
 }
+
+func InitStore(s DocumentStore) {
+	store = s
+}

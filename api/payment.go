@@ -2,7 +2,7 @@ package api
 
 const DocumentTypePayment = "Payment"
 
-type paymentParty struct {
+type PaymentParty struct {
 	AccountName       string `json:"accountName"`
 	AccountNumber     string `json:"accountNumber"`
 	AccountNumberCode string `json:"accountNumberCode"`
@@ -14,9 +14,9 @@ type paymentParty struct {
 
 type Payment struct {
 	Amount               string        `json:"amount"`
-	Beneficiary          *paymentParty `json:"beneficiary"`
+	Beneficiary          *PaymentParty `json:"beneficiary"`
 	Currency             string        `json:"currency"`
-	DebitorParty         *paymentParty `json:"debitorParty"`
+	DebitorParty         *PaymentParty `json:"debitorParty"`
 	EndToEndReference    string        `json:"endToEndReference"`
 	NumericReference     string        `json:"numericReference"`
 	PaymentID            string        `json:"paymentId"`
@@ -42,4 +42,12 @@ type Payment struct {
 		OriginalAmount    string `json:"originalAmount"`
 		OriginalCurrency  string `json:"originalCurrency"`
 	} `json:"fx"`
+}
+
+func NewPayment() *Payment {
+	return &Payment{}
+}
+
+func (p *Payment) Validate() error {
+	return nil
 }

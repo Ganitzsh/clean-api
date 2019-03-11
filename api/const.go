@@ -8,6 +8,9 @@ const (
 	APIV1ContentTypes = "application/json,application/json+v1"
 	APIV1Prefix       = "/v1"
 
+	ReqDataKey = "data"
+	ReqCodeKey = "code"
+
 	DefaultNodeName = "Document API"
 	DefaultHost     = "127.0.0.1"
 	DefaultPort     = "8080"
