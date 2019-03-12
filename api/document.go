@@ -1,7 +1,6 @@
 package api
 
 import (
-	"net/http"
 	"reflect"
 	"strings"
 	"time"
@@ -16,11 +15,11 @@ type Model interface {
 }
 
 type Document struct {
-	ID         uuid.UUID  `json:"id" validate:"required"`
-	Type       string     `json:"type" validate:"required"`
-	CreatedAt  time.Time  `json:"createdAt" validate:"required"`
-	APIVersion APIVersion `json:"apiVersion" validate:"required"`
-	Attributes Model      `json:"attributes"`
+	ID         uuid.UUID   `json:"id" validate:"required"`
+	Type       string      `json:"type" validate:"required"`
+	CreatedAt  time.Time   `json:"createdAt" validate:"required"`
+	APIVersion APIVersion  `json:"apiVersion" validate:"required"`
+	Attributes interface{} `json:"attributes"`
 }
 
 func NewDocument() *Document {
@@ -29,10 +28,6 @@ func NewDocument() *Document {
 		ID:         uuid.New(),
 		APIVersion: CurrentAPIVersion,
 	}
-}
-
-func (d *Document) Render(w http.ResponseWriter, r *http.Request) error {
-	return nil
 }
 
 func (d *Document) SetAttributes(attr Model) *Document {

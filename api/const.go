@@ -37,4 +37,5 @@ const (
 	DocumentIDPrefix = "payment_id"
 
 	HeaderContentType = "Content-Type"
+	ContentTypeJSON   = "application/json; charset=utf-8"
 )

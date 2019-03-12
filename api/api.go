@@ -29,20 +29,41 @@ type JSENDData struct {
 	Status string      `json:"status"`
 }
 
-func NewJSENDData(data interface{}, code int) *JSENDData {
+func NewJSENDData(data interface{}, code ...int) *JSENDData {
+	var overrideCode int
+	if code != nil {
+		overrideCode = code[0]
+	}
 	return &JSENDData{
 		Data:   data,
-		Code:   code,
+		Code:   overrideCode,
 		Status: "success",
 	}
 }
 
 func (p *JSENDData) Render(w http.ResponseWriter, r *http.Request) error {
-	if p.Data == nil {
-		return ErrSomethingWentWrong(ErrNilValue)
+	status := "success"
+	code := http.StatusOK
+	if apiError, ok := p.Data.(*APIError); ok {
+		status = "error"
+		code = http.StatusInternalServerError
+		if apiError.DataError {
+			status = "fail"
+		}
+		if apiError.StatusCode != 0 {
+			code = apiError.StatusCode
+		}
+		if p.Code != 0 {
+			code = p.Code
+		}
+		p.Code = code
+		p.Status = status
+		render.Status(r, p.Code)
+		return nil
 	}
+	p.Code = code
+	p.Status = status
 	render.Status(r, p.Code)
-	render.JSON(w, r, p)
 	return nil
 }
 
@@ -62,7 +83,7 @@ func readLimOff(r *http.Request) (lim int, off int) {
 }
 
 func NotFound(w http.ResponseWriter, r *http.Request) {
-	render.Render(w, r, ErrNotFound)
+	render.Render(w, r, NewJSENDData(ErrNotFound))
 }
 
 func paymentContext(next http.Handler) http.Handler {
@@ -72,7 +93,7 @@ func paymentContext(next http.Handler) http.Handler {
 
 		paymentID, err := uuid.Parse(chi.URLParam(r, "paymentID"))
 		if err != nil {
-			render.Render(w, r, ErrInvalidInput)
+			render.Render(w, r, NewJSENDData(ErrInvalidInput))
 			return
 		}
 		payment, e = store.GetByID(paymentID)
@@ -87,10 +108,10 @@ func paymentContext(next http.Handler) http.Handler {
 
 func handleError(w http.ResponseWriter, r *http.Request, err error) {
 	if apiErr, ok := err.(*APIError); ok {
-		render.Render(w, r, apiErr)
+		render.Render(w, r, NewJSENDData(apiErr))
 		return
 	}
-	render.Render(w, r, ErrSomethingWentWrong(err))
+	render.Render(w, r, NewJSENDData(ErrSomethingWentWrong(err)))
 }
 
 func ListPayments(w http.ResponseWriter, r *http.Request) {

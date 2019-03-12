@@ -3,8 +3,6 @@ package api
 import (
 	"errors"
 	"net/http"
-
-	"github.com/go-chi/render"
 )
 
 type APIError struct {
@@ -20,17 +18,6 @@ func (e APIError) Error() string {
 }
 
 func (e *APIError) Render(w http.ResponseWriter, r *http.Request) error {
-	render.Status(r, e.StatusCode)
-	status := "error"
-	if e.DataError {
-		status = "fail"
-	}
-	payload := JSENDData{
-		Code:   e.StatusCode,
-		Data:   e,
-		Status: status,
-	}
-	render.JSON(w, r, payload)
 	return nil
 }
 
