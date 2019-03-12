@@ -20,7 +20,7 @@ import (
 
 var (
 	config = NewAPIConfig()
-	store  DocumentStore
+	store  PaymentStore
 )
 
 type JSENDData struct {
@@ -88,7 +88,7 @@ func NotFound(w http.ResponseWriter, r *http.Request) {
 
 func paymentContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var payment *Document
+		var payment *Payment
 		var e error
 
 		paymentID, err := uuid.Parse(chi.URLParam(r, "paymentID"))
@@ -131,7 +131,33 @@ func GetPayment(w http.ResponseWriter, r *http.Request) {
 	))
 }
 
+type SavePaymentReq struct {
+	*Payment
+}
+
+func NewSavePaymentReq() *SavePaymentReq {
+	return &SavePaymentReq{}
+}
+
+func (p *SavePaymentReq) Bind(req *http.Request) error {
+	p.CreatedAt = nil
+	p.UpdatedAt = nil
+	return nil
+}
+
 func SavePayment(w http.ResponseWriter, r *http.Request) {
+	p := NewSavePaymentReq()
+	if err := render.Bind(r, p); err != nil {
+		handleError(w, r, ErrInvalidInput)
+		return
+	}
+	payment := r.Context().Value("payment").(*Payment)
+	if payment == nil {
+		payment = NewPayment()
+	}
+	p.ID = payment.ID
+	p.CreatedAt = payment.CreatedAt
+	p.UpdatedAt = payment.UpdatedAt
 	handleError(w, r, ErrNotImplemented)
 }
 

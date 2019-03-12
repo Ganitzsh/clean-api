@@ -13,7 +13,7 @@ const (
 	ReqDataKey = "data"
 	ReqCodeKey = "code"
 
-	DefaultNodeName = "Document API"
+	DefaultNodeName = "Payment API"
 	DefaultHost     = "127.0.0.1"
 	DefaultPort     = "8080"
 	DefaultDevMode  = true
@@ -34,7 +34,7 @@ const (
 	ConfigKeyDevMode     = "dev_mode"
 	ConfigKeyNodeName    = "name"
 
-	DocumentIDPrefix = "payment_id"
+	PaymentIDPrefix = "payment_id"
 
 	HeaderContentType = "Content-Type"
 	ContentTypeJSON   = "application/json; charset=utf-8"

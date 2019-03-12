@@ -38,11 +38,11 @@ func testListPayments(db *mockDB) func(*testing.T) {
 		resp := doHTTPReq(handler, http.MethodGet, "/payments", nil)
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 		body, _ := ioutil.ReadAll(resp.Body)
-		d := api.JSENDData{Data: []*api.Document{}}
+		d := api.JSENDData{Data: []*api.Payment{}}
 		if !assert.NoError(t, json.Unmarshal(body, &d)) {
 			t.FailNow()
 		}
-		assert.Len(t, d.Data, 4)
+		assert.Len(t, d.Data, 3)
 	}
 }
 
@@ -60,7 +60,7 @@ func testGetPayment(db *mockDB) func(*testing.T) {
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 		assert.Equal(t, api.ContentTypeJSON, resp.Header.Get(api.HeaderContentType))
 		body, _ := ioutil.ReadAll(resp.Body)
-		d := api.JSENDData{Data: new(api.Document)}
+		d := api.JSENDData{Data: new(api.Payment)}
 		if !assert.NoError(t, json.Unmarshal(body, &d)) {
 			t.FailNow()
 		}

@@ -1,6 +1,10 @@
 package api
 
-const DocumentTypePayment = "Payment"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type PaymentParty struct {
 	AccountName       string `json:"accountName"`
@@ -13,16 +17,18 @@ type PaymentParty struct {
 }
 
 type Payment struct {
+	ID                   uuid.UUID     `json:"paymentId"`
+	CreatedAt            *time.Time    `json:"createdAt"`
+	UpdatedAt            *time.Time    `json:"updatedAt"`
+	Purpose              string        `json:"purpose"`
+	Scheme               string        `json:"scheme"`
+	Type                 string        `json:"type"`
 	Amount               string        `json:"amount"`
 	Beneficiary          *PaymentParty `json:"beneficiary"`
 	Currency             string        `json:"currency"`
 	DebitorParty         *PaymentParty `json:"debitorParty"`
 	EndToEndReference    string        `json:"endToEndReference"`
 	NumericReference     string        `json:"numericReference"`
-	PaymentID            string        `json:"paymentId"`
-	PaymentPurpose       string        `json:"paymentPurpose"`
-	PaymentScheme        string        `json:"paymentScheme"`
-	PaymentType          string        `json:"paymentType"`
 	ProcessingDate       string        `json:"processingDate"`
 	Reference            string        `json:"reference"`
 	SchemePaymentSubType string        `json:"schemePaymentSubType"`
@@ -45,7 +51,17 @@ type Payment struct {
 }
 
 func NewPayment() *Payment {
-	return &Payment{}
+	now := time.Now()
+	return &Payment{
+		ID:        uuid.New(),
+		CreatedAt: &now,
+		UpdatedAt: &now,
+	}
+}
+
+func (p *Payment) SetScheme(value string) *Payment {
+	p.Scheme = value
+	return p
 }
 
 func (p *Payment) Validate() error {

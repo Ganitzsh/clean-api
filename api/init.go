@@ -33,6 +33,6 @@ func InitConfig() {
 	viper.AutomaticEnv()
 }
 
-func InitStore(s DocumentStore) {
+func InitStore(s PaymentStore) {
 	store = s
 }
