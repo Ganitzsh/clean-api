@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
 	"strings"
 	"syscall"
 
@@ -23,82 +22,20 @@ var (
 	store  PaymentStore
 )
 
-type JSENDData struct {
-	Data   interface{} `json:"data"`
-	Code   int         `json:"code"`
-	Status string      `json:"status"`
-}
-
-func NewJSENDData(data interface{}, code ...int) *JSENDData {
-	var overrideCode int
-	if code != nil {
-		overrideCode = code[0]
-	}
-	return &JSENDData{
-		Data:   data,
-		Code:   overrideCode,
-		Status: "success",
-	}
-}
-
-func (p *JSENDData) Render(w http.ResponseWriter, r *http.Request) error {
-	status := "success"
-	code := http.StatusOK
-	if apiError, ok := p.Data.(*APIError); ok {
-		status = "error"
-		code = http.StatusInternalServerError
-		if apiError.DataError {
-			status = "fail"
-		}
-		if apiError.StatusCode != 0 {
-			code = apiError.StatusCode
-		}
-		if p.Code != 0 {
-			code = p.Code
-		}
-		p.Code = code
-		p.Status = status
-		render.Status(r, p.Code)
-		return nil
-	}
-	p.Code = code
-	p.Status = status
-	render.Status(r, p.Code)
-	return nil
-}
-
-func readLimOff(r *http.Request) (lim int, off int) {
-	if r == nil {
-		return 0, 0
-	}
-	val, err := strconv.Atoi(r.URL.Query().Get("lim"))
-	if err == nil {
-		lim = val
-	}
-	val, err = strconv.Atoi(r.URL.Query().Get("off"))
-	if err == nil {
-		off = val
-	}
-	return lim, off
-}
-
 func NotFound(w http.ResponseWriter, r *http.Request) {
 	render.Render(w, r, NewJSENDData(ErrNotFound))
 }
 
 func paymentContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var payment *Payment
-		var e error
-
 		paymentID, err := uuid.Parse(chi.URLParam(r, "paymentID"))
 		if err != nil {
 			render.Render(w, r, NewJSENDData(ErrInvalidInput))
 			return
 		}
-		payment, e = store.GetByID(paymentID)
-		if e != nil {
-			handleError(w, r, e)
+		payment, err := store.GetByID(paymentID)
+		if err != nil {
+			handleError(w, r, err)
 			return
 		}
 		ctx := context.WithValue(r.Context(), "payment", payment)
@@ -136,29 +73,31 @@ type SavePaymentReq struct {
 }
 
 func NewSavePaymentReq() *SavePaymentReq {
-	return &SavePaymentReq{}
+	return &SavePaymentReq{NewPayment()}
 }
 
 func (p *SavePaymentReq) Bind(req *http.Request) error {
+	// TODO: Validate
 	p.CreatedAt = nil
 	p.UpdatedAt = nil
 	return nil
 }
 
 func SavePayment(w http.ResponseWriter, r *http.Request) {
+	var payment *Payment
 	p := NewSavePaymentReq()
 	if err := render.Bind(r, p); err != nil {
 		handleError(w, r, ErrInvalidInput)
 		return
 	}
-	payment := r.Context().Value("payment").(*Payment)
-	if payment == nil {
-		payment = NewPayment()
+	if pCtx := r.Context().Value("payment"); pCtx == nil {
+		payment = p.Payment
+	} else {
+		payment = pCtx.(*Payment)
+		p.CreatedAt = payment.CreatedAt
+		p.UpdatedAt = payment.UpdatedAt
 	}
-	p.ID = payment.ID
-	p.CreatedAt = payment.CreatedAt
-	p.UpdatedAt = payment.UpdatedAt
-	if err := store.Save(p); err != nil {
+	if err := store.Save(p.Payment); err != nil {
 		handleError(w, r, err)
 		return
 	}
@@ -166,7 +105,12 @@ func SavePayment(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeletePayment(w http.ResponseWriter, r *http.Request) {
-	handleError(w, r, ErrNotImplemented)
+	payment := r.Context().Value("payment").(*Payment)
+	if err := store.Delete(payment.ID); err != nil {
+		handleError(w, r, err)
+		return
+	}
+	render.NoContent(w, r)
 }
 
 func Routes() http.Handler {
@@ -179,6 +123,7 @@ func Routes() http.Handler {
 		MaxAge:           300,
 	})
 	r.Use(cors.Handler)
+	r.Use(middleware.Recoverer)
 	r.Use(middleware.AllowContentType(strings.Split(APIV1ContentTypes, ",")...))
 	if !config.DevMode {
 		r.Use(middleware.Logger)

@@ -11,10 +11,10 @@ type APIVersion int32
 
 type PaymentStore interface {
 	Total() int
-	GetMany(limit, offset int, filters ...*PaymentStoreFilter) ([]*Payment, *APIError)
-	GetByID(id uuid.UUID) (*Payment, *APIError)
-	Save(p *Payment) *APIError
-	Delete(id uuid.UUID) *APIError
+	GetMany(limit, offset int, filters ...*PaymentStoreFilter) ([]*Payment, error)
+	GetByID(id uuid.UUID) (*Payment, error)
+	Save(p *Payment) error
+	Delete(id uuid.UUID) error
 }
 
 type PaymentStoreFilterType uint
@@ -92,7 +92,7 @@ func PaymentStoreFilterIsScheme(typ string) *PaymentStoreFilter {
 func (store *PaymentInMemStore) GetMany(
 	limit, offset int,
 	filters ...*PaymentStoreFilter,
-) ([]*Payment, *APIError) {
+) ([]*Payment, error) {
 	to := limit + offset
 	if to > len(store.Database) {
 		return []*Payment{}, nil
@@ -126,7 +126,7 @@ func (store *PaymentInMemStore) GetMany(
 	return subset[offset:to], nil
 }
 
-func (store *PaymentInMemStore) GetByID(id uuid.UUID) (*Payment, *APIError) {
+func (store *PaymentInMemStore) GetByID(id uuid.UUID) (*Payment, error) {
 	for _, p := range store.Database {
 		if p.ID.String() == id.String() {
 			return p, nil
@@ -135,7 +135,7 @@ func (store *PaymentInMemStore) GetByID(id uuid.UUID) (*Payment, *APIError) {
 	return nil, ErrNotFound
 }
 
-func (store *PaymentInMemStore) Save(d *Payment) *APIError {
+func (store *PaymentInMemStore) Save(d *Payment) error {
 	if d == nil {
 		return ErrSomethingWentWrong(ErrNilValue)
 	}
@@ -151,7 +151,7 @@ func (store *PaymentInMemStore) Save(d *Payment) *APIError {
 	return nil
 }
 
-func (store *PaymentInMemStore) Delete(id uuid.UUID) *APIError {
+func (store *PaymentInMemStore) Delete(id uuid.UUID) error {
 	for i, storedDocument := range store.Database {
 		if storedDocument.ID.String() == id.String() {
 			store.Database = store.Database[:i+copy(store.Database[i:], store.Database[i+1:])]
