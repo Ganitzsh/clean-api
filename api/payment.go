@@ -17,7 +17,7 @@ type PaymentParty struct {
 }
 
 type Payment struct {
-	ID                   uuid.UUID     `json:"paymentId"`
+	ID                   uuid.UUID     `json:"id" bson:"_id,omitempty"`
 	CreatedAt            *time.Time    `json:"createdAt"`
 	UpdatedAt            *time.Time    `json:"updatedAt"`
 	Purpose              string        `json:"purpose"`

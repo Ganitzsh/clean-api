@@ -1,12 +1,13 @@
 package api
 
 import (
-	"context"
 	"reflect"
 	"strings"
 
+	"github.com/globalsign/mgo"
+	"github.com/globalsign/mgo/bson"
 	"github.com/google/uuid"
-	"go.mongodb.org/mongo-driver/mongo"
+	"github.com/sirupsen/logrus"
 )
 
 type APIVersion int32
@@ -100,7 +101,7 @@ func (store *PaymentInMemStore) GetMany(
 		return []*Payment{}, nil
 	}
 	subset := []*Payment{}
-	if filters != nil {
+	if filters != nil && len(filters) > 0 {
 		for _, filter := range filters {
 			for _, d := range store.Database {
 				e := reflect.ValueOf(d).Elem()
@@ -118,6 +119,9 @@ func (store *PaymentInMemStore) GetMany(
 		}
 	} else {
 		subset = append(subset, store.Database...)
+	}
+	if offset > len(subset) {
+		return []*Payment{}, nil
 	}
 	if offset == 0 && limit == 0 {
 		return subset, nil
@@ -160,39 +164,121 @@ func (store *PaymentInMemStore) Delete(id uuid.UUID) error {
 			return nil
 		}
 	}
-	return ErrNotFound
+	return nil
+}
+
+type MgoWrapQuery struct {
+	*mgo.Query
+}
+
+func (q *MgoWrapQuery) Skip(n int) MongoQuery {
+	return &MgoWrapQuery{}
+}
+
+func (q *MgoWrapQuery) Limit(n int) MongoQuery {
+	return &MgoWrapQuery{}
+}
+
+// MongoQuery interfaces the *mgo.Query type
+type MongoQuery interface {
+	All(result interface{}) error
+	One(result interface{}) error
+	Skip(n int) MongoQuery
+	Limit(n int) MongoQuery
+}
+
+// MongoCollection interfaces the *mgo.Collection type
+type MongoCollection interface {
+	FindId(id interface{}) MongoQuery
+	RemoveId(id interface{}) error
+	Insert(docs ...interface{}) error
+	Find(query interface{}) MongoQuery
+	Count() (int, error)
 }
 
 type PaymentMongoStore struct {
-	*mongo.Collection
+	MongoCollection
 }
 
-func NewPaymentMongoStore(c *mongo.Collection) *PaymentMongoStore {
+func NewPaymentMongoStore(c MongoCollection) *PaymentMongoStore {
 	return &PaymentMongoStore{c}
 }
 
 func (store *PaymentMongoStore) Total() int {
-	return 0
+	n, _ := store.Count()
+	return n
 }
 
 func (store *PaymentMongoStore) GetMany(
 	limit, offset int,
 	filters ...*PaymentStoreFilter,
 ) ([]*Payment, error) {
-	return nil, ErrNotImplemented
+	ret := []*Payment{}
+	query := bson.M{}
+	if filters != nil {
+		t := reflect.TypeOf(Payment{})
+		for _, f := range filters {
+			for i := 0; i < t.NumField(); i++ {
+				if t.Field(i).Name == f.Field {
+					tagValue := t.Field(i).Tag.Get("bson")
+					if tagValue == "" {
+						tagValue = t.Field(i).Tag.Get("json")
+					} else if tagValue == "" {
+						tagValue = f.Field
+					}
+					switch f.Type {
+					case PaymentStoreFilterTypeEqual:
+						query[tagValue] = f.Want
+					case PaymentStoreFilterTypeIn:
+						if t.Kind() != reflect.Slice {
+							logrus.Warn("This filter is expecting a slice")
+						} else {
+							query[tagValue] = bson.M{
+								"$in": f.Want,
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	q := store.Find(query).Skip(offset)
+	if limit > 0 {
+		q = q.Limit(limit)
+	}
+	if err := q.All(&ret); err != nil {
+		return nil, ErrSomethingWentWrong(err)
+	}
+	return ret, nil
 }
 
 func (store *PaymentMongoStore) GetByID(id uuid.UUID) (*Payment, error) {
-	return nil, ErrNotImplemented
+	ret := Payment{}
+	if err := store.FindId(id).One(&ret); err != nil {
+		if err != mgo.ErrNotFound {
+			return nil, ErrSomethingWentWrong(err)
+		} else {
+			return nil, ErrNotFound
+		}
+	}
+	return &ret, nil
 }
 
-func (store *PaymentMongoStore) Save(d *Payment) error {
-	if _, err := store.InsertOne(context.TODO(), d); err != nil {
+func (store *PaymentMongoStore) Save(p *Payment) error {
+	if len(p.ID) == 0 {
+		p.ID = uuid.New()
+	}
+	if err := store.Insert(p); err != nil {
 		return ErrSomethingWentWrong(err)
 	}
 	return nil
 }
 
 func (store *PaymentMongoStore) Delete(id uuid.UUID) error {
-	return ErrNotImplemented
+	if err := store.RemoveId(id); err != nil {
+		if err != mgo.ErrNotFound {
+			return ErrSomethingWentWrong(err)
+		}
+	}
+	return nil
 }
