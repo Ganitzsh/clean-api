@@ -1,6 +1,7 @@
 package api
 
 import (
+	"net/http"
 	"reflect"
 	"strings"
 	"time"
@@ -28,6 +29,10 @@ func NewDocument() *Document {
 		ID:         uuid.New(),
 		APIVersion: CurrentAPIVersion,
 	}
+}
+
+func (d *Document) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
 }
 
 func (d *Document) SetAttributes(attr Model) *Document {
@@ -72,7 +77,7 @@ func (sf *DocumentStoreFilter) SetType(value DocumentStoreFilterType) *DocumentS
 
 func (f DocumentStoreFilter) Match(has interface{}) (bool, error) {
 	if f.Want == nil && has == nil {
-		return false, ErrSomethingWentWrong
+		return false, ErrSomethingWentWrong(nil)
 	}
 	switch f.Type {
 	case DocumentStoreFilterTypeEqual:

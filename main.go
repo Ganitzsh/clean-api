@@ -7,7 +7,7 @@ import (
 
 func init() {
 	api.InitConfig()
-	api.InitStore(api.NewDocumentInMemStore())
+	// api.InitStore(api.NewDocumentInMemStore())
 }
 
 func main() {

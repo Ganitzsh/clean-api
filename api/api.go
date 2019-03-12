@@ -10,10 +10,11 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/gin-gonic/gin/render"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
+	"github.com/go-chi/render"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 )
 
@@ -28,87 +29,21 @@ type JSENDData struct {
 	Status string      `json:"status"`
 }
 
-func postProcess(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var data interface{}
-		var status string
-		var code int = http.StatusInternalServerError
-		var ctx context.Context
-		next.ServeHTTP(w, r)
-		ctx = r.Context()
-		if ctxCode, ok := ctx.Value(APIContextKeyCode).(int); ok {
-			code = ctxCode
-		}
-		if err, ok := ctx.Value(APIContextKeyError).(error); ok {
-			status = "error"
-			if apiErr, ok := err.(*APIError); ok {
-				if apiErr.DataError {
-					status = "fail"
-				}
-				data = apiErr
-			} else {
-				data = &APIError{Message: err.Error()}
-			}
-		} else {
-			status = "success"
-			data = ctx.Value(APIContextKeyData)
-		}
-		render.WriteJSON(w, JSENDData{
-			Data:   data,
-			Code:   code,
-			Status: status,
-		})
-	})
-}
-
-// func success(r *http.Request, code int, data interface{}) {
-// 	ctx := NewAPIContext(r.Context()).
-// 		SetCode(code).
-// 		SetData(data)
-// 	newReq := r.WithContext(ctx)
-// 	*r = *newReq
-// }
-
-// func failure(r *http.Request, err error, code int) {
-// 	ctx := NewAPIContext((*r).Context())
-// 	if err == nil {
-// 		ctx.
-// 			SetCode(code).
-// 			SetError(ErrSomethingWentWrong)
-// 	} else {
-// 		ctx.
-// 			SetCode(code).
-// 			SetError(err)
-// 	}
-// 	newReq := r.WithContext(ctx)
-// 	*r = *newReq
-// }
-
-func success(w http.ResponseWriter, code int, data interface{}) {
-	render.WriteJSON(w, JSENDData{
+func NewJSENDData(data interface{}, code int) *JSENDData {
+	return &JSENDData{
 		Data:   data,
 		Code:   code,
 		Status: "success",
-	})
+	}
 }
 
-func failure(w http.ResponseWriter, err error, code int) {
-	var data interface{}
-	status := "error"
-	if apiErr, ok := err.(*APIError); ok {
-		if apiErr.DataError {
-			status = "fail"
-		}
-		data = apiErr
-	} else {
-		data = &APIError{Message: err.Error()}
+func (p *JSENDData) Render(w http.ResponseWriter, r *http.Request) error {
+	if p.Data == nil {
+		return ErrSomethingWentWrong(ErrNilValue)
 	}
-	w.WriteHeader(code)
-	render.WriteJSON(w, JSENDData{
-		Data:   data,
-		Code:   code,
-		Status: status,
-	})
+	render.Status(r, p.Code)
+	render.JSON(w, r, p)
+	return nil
 }
 
 func readLimOff(r *http.Request) (lim int, off int) {
@@ -126,25 +61,61 @@ func readLimOff(r *http.Request) (lim int, off int) {
 	return lim, off
 }
 
+func NotFound(w http.ResponseWriter, r *http.Request) {
+	render.Render(w, r, ErrNotFound)
+}
+
+func paymentContext(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var payment *Document
+		var e error
+
+		paymentID, err := uuid.Parse(chi.URLParam(r, "paymentID"))
+		if err != nil {
+			render.Render(w, r, ErrInvalidInput)
+			return
+		}
+		payment, e = store.GetByID(paymentID)
+		if e != nil {
+			handleError(w, r, e)
+			return
+		}
+		ctx := context.WithValue(r.Context(), "payment", payment)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func handleError(w http.ResponseWriter, r *http.Request, err error) {
+	if apiErr, ok := err.(*APIError); ok {
+		render.Render(w, r, apiErr)
+		return
+	}
+	render.Render(w, r, ErrSomethingWentWrong(err))
+}
+
 func ListPayments(w http.ResponseWriter, r *http.Request) {
 	limit, offset := readLimOff(r)
 	ret, err := store.GetMany(limit, offset)
 	if err != nil {
-		failure(w, err, http.StatusBadRequest)
+		handleError(w, r, err)
+		return
 	}
-	success(w, http.StatusOK, ret)
+	render.Render(w, r, NewJSENDData(ret, http.StatusOK))
 }
 
 func GetPayment(w http.ResponseWriter, r *http.Request) {
-	failure(w, ErrNotImplemented, http.StatusBadRequest)
+	render.Render(w, r, NewJSENDData(
+		r.Context().Value("payment"),
+		http.StatusOK,
+	))
 }
 
 func SavePayment(w http.ResponseWriter, r *http.Request) {
-	failure(w, ErrNotImplemented, http.StatusBadRequest)
+	handleError(w, r, ErrNotImplemented)
 }
 
 func DeletePayment(w http.ResponseWriter, r *http.Request) {
-	failure(w, ErrNotImplemented, http.StatusBadRequest)
+	handleError(w, r, ErrNotImplemented)
 }
 
 func Routes() http.Handler {
@@ -161,9 +132,18 @@ func Routes() http.Handler {
 	if !config.DevMode {
 		r.Use(middleware.Logger)
 	}
+	r.NotFound(NotFound)
 	r.Route("/payments", func(r chi.Router) {
-		// r.Use(postProcess)
-		r.Get("/", ListPayments)
+		r.Get(URLRoot, ListPayments)
+		r.Post(URLRoot, SavePayment)
+		r.Route("/{paymentID}", func(r chi.Router) {
+			r.Use(paymentContext)
+			r.Get(URLRoot, GetPayment)
+			r.Put(URLRoot, SavePayment)
+			r.Post(URLRoot, SavePayment)
+			r.Delete(URLRoot, DeletePayment)
+		})
+
 	})
 	return r
 }

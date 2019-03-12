@@ -5,6 +5,8 @@ const (
 	Version           = "0.0.1"
 	CurrentAPIVersion = APIVersion(1)
 
+	URLRoot = "/"
+
 	APIV1ContentTypes = "application/json,application/json+v1"
 	APIV1Prefix       = "/v1"
 
@@ -33,4 +35,6 @@ const (
 	ConfigKeyNodeName    = "name"
 
 	DocumentIDPrefix = "payment_id"
+
+	HeaderContentType = "Content-Type"
 )
