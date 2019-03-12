@@ -158,7 +158,11 @@ func SavePayment(w http.ResponseWriter, r *http.Request) {
 	p.ID = payment.ID
 	p.CreatedAt = payment.CreatedAt
 	p.UpdatedAt = payment.UpdatedAt
-	handleError(w, r, ErrNotImplemented)
+	if err := store.Save(p); err != nil {
+		handleError(w, r, err)
+		return
+	}
+	render.Render(w, r, NewJSENDData(p))
 }
 
 func DeletePayment(w http.ResponseWriter, r *http.Request) {
