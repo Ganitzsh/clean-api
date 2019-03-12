@@ -98,17 +98,17 @@ func testPaymentStoreGetMany(db *mockDB) func(*testing.T) {
 		payments, err = store.GetMany(1, 0)
 		assert.NoError(t, err)
 		assert.Len(t, payments, 1)
-		assert.Equal(t, db.ID1, db.Payment1.ID)
+		assert.Equal(t, db.ID1, payments[0].ID)
 
 		payments, err = store.GetMany(1, 1)
 		assert.NoError(t, err)
 		assert.Len(t, payments, 1)
-		assert.Equal(t, db.ID2, db.Payment2.ID)
+		assert.Equal(t, db.ID2, payments[0].ID)
 
 		payments, err = store.GetMany(1, 2)
 		assert.NoError(t, err)
 		assert.Len(t, payments, 1)
-		assert.Equal(t, db.ID3, db.Payment3.ID)
+		assert.Equal(t, db.ID3, payments[0].ID)
 
 		payments, err = store.GetMany(0, 0, api.PaymentStoreFilterIsScheme(schemeA))
 		assert.NoError(t, err)

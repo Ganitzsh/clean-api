@@ -3,7 +3,17 @@ package api
 import (
 	"net/http"
 	"strconv"
+
+	"github.com/go-chi/render"
 )
+
+func handleError(w http.ResponseWriter, r *http.Request, err error) {
+	if apiErr, ok := err.(*APIError); ok {
+		render.Render(w, r, NewJSENDData(apiErr))
+		return
+	}
+	render.Render(w, r, NewJSENDData(ErrSomethingWentWrong(err)))
+}
 
 func readLimOff(r *http.Request) (lim int, off int) {
 	if r == nil {

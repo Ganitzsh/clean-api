@@ -43,14 +43,6 @@ func paymentContext(next http.Handler) http.Handler {
 	})
 }
 
-func handleError(w http.ResponseWriter, r *http.Request, err error) {
-	if apiErr, ok := err.(*APIError); ok {
-		render.Render(w, r, NewJSENDData(apiErr))
-		return
-	}
-	render.Render(w, r, NewJSENDData(ErrSomethingWentWrong(err)))
-}
-
 func ListPayments(w http.ResponseWriter, r *http.Request) {
 	limit, offset := readLimOff(r)
 	ret, err := store.GetMany(limit, offset)
@@ -139,7 +131,6 @@ func Routes() http.Handler {
 			r.Post(URLRoot, SavePayment)
 			r.Delete(URLRoot, DeletePayment)
 		})
-
 	})
 	return r
 }
@@ -149,6 +140,7 @@ func Start() error {
 		Addr:    config.GetFullHost(),
 		Handler: Routes(),
 	}
+
 	done := make(chan bool)
 	sigint := make(chan os.Signal, 1)
 	signal.Notify(sigint, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)

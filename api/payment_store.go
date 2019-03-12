@@ -1,10 +1,12 @@
 package api
 
 import (
+	"context"
 	"reflect"
 	"strings"
 
 	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type APIVersion int32
@@ -159,4 +161,38 @@ func (store *PaymentInMemStore) Delete(id uuid.UUID) error {
 		}
 	}
 	return ErrNotFound
+}
+
+type PaymentMongoStore struct {
+	*mongo.Collection
+}
+
+func NewPaymentMongoStore(c *mongo.Collection) *PaymentMongoStore {
+	return &PaymentMongoStore{c}
+}
+
+func (store *PaymentMongoStore) Total() int {
+	return 0
+}
+
+func (store *PaymentMongoStore) GetMany(
+	limit, offset int,
+	filters ...*PaymentStoreFilter,
+) ([]*Payment, error) {
+	return nil, ErrNotImplemented
+}
+
+func (store *PaymentMongoStore) GetByID(id uuid.UUID) (*Payment, error) {
+	return nil, ErrNotImplemented
+}
+
+func (store *PaymentMongoStore) Save(d *Payment) error {
+	if _, err := store.InsertOne(context.TODO(), d); err != nil {
+		return ErrSomethingWentWrong(err)
+	}
+	return nil
+}
+
+func (store *PaymentMongoStore) Delete(id uuid.UUID) error {
+	return ErrNotImplemented
 }

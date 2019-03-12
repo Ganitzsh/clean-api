@@ -44,6 +44,18 @@ func TestNotFound(t *testing.T) {
 	}
 }
 
+func TestWrongContentType(t *testing.T) {
+	handler := api.Routes()
+	req, _ := http.NewRequest(http.MethodPost, "/payments", bytes.NewBufferString(""))
+	rr := httptest.NewRecorder()
+	req.Header.Add(api.HeaderContentType, "some/madeup-ct")
+	handler.ServeHTTP(rr, req)
+	resp := rr.Result()
+	body, _ := ioutil.ReadAll(resp.Body)
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	assert.Equal(t, api.ErrInvalidInput.AppCode, readErrorCode(body))
+}
+
 func testListPayments(db *mockDB) func(*testing.T) {
 	api.InitStore(db.Store)
 	handler := api.Routes()
