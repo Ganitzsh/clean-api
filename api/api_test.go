@@ -38,6 +38,7 @@ func TestNotFound(t *testing.T) {
 	resp := doHTTPReq(handler, http.MethodGet, "/unknown", "")
 	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
 	body, _ := ioutil.ReadAll(resp.Body)
+	assert.Equal(t, api.ErrNotFound.AppCode, readErrorCode(body))
 	d := api.JSENDData{}
 	if !assert.NoError(t, json.Unmarshal(body, &d)) {
 		t.FailNow()
