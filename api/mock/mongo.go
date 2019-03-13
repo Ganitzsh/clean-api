@@ -77,8 +77,8 @@ func (c *PaymentCollection) FindId(id interface{}) api.MongoQuery {
 	}
 }
 
-func (c *PaymentCollection) Insert(docs ...interface{}) error {
-	return nil
+func (c *PaymentCollection) UpsertID(id interface{}, doc interface{}) (*mgo.ChangeInfo, error) {
+	return nil, c.Data.Save(doc.(*api.Payment))
 }
 
 func (c *PaymentCollection) Find(query interface{}) api.MongoQuery {

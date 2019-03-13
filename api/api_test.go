@@ -112,7 +112,7 @@ func testSavePayment(db *mockDB) func(*testing.T) {
 		b, _ := json.Marshal(payment)
 		resp = doHTTPReq(handler, http.MethodPost, "/payments", string(b))
 		body, _ = ioutil.ReadAll(resp.Body)
-		assert.Equal(t, http.StatusOK, resp.StatusCode)
+		assert.Equal(t, http.StatusCreated, resp.StatusCode)
 		assert.Equal(t, api.ErrorCode(""), readErrorCode(body))
 		p := api.JSENDData{Data: new(api.Payment)}
 		if !assert.NoError(t, json.Unmarshal(body, &p)) {

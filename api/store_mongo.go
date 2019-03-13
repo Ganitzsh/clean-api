@@ -23,6 +23,7 @@ type MongoQuery interface {
 type MongoCollection interface {
 	FindId(id interface{}) MongoQuery
 	RemoveId(id interface{}) error
+	UpsertId(id interface{}, update interface{}) (*mgo.ChangeInfo, error)
 	Insert(docs ...interface{}) error
 	Find(query interface{}) MongoQuery
 	Count() (int, error)
@@ -136,7 +137,8 @@ func (store *PaymentMongoStore) Save(p *Payment) error {
 	if len(p.ID) == 0 {
 		p.ID = uuid.New()
 	}
-	if err := store.Insert(p); err != nil {
+	p.UpdatedAt = Now()
+	if _, err := store.UpsertId(p.ID, p); err != nil {
 		return ErrSomethingWentWrong(err)
 	}
 	return nil

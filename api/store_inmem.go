@@ -87,6 +87,7 @@ func (store *PaymentInMemStore) Save(d *Payment) error {
 	if d.ID.String() != "" {
 		for i, storedDocument := range store.Database {
 			if d.ID.String() == storedDocument.ID.String() {
+				d.UpdatedAt = Now()
 				store.Database[i] = d
 				return nil
 			}

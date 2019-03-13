@@ -1,0 +1,35 @@
+version: '3.7'
+
+services:
+
+  api:
+    build: .
+    environment:
+      API_DATABASE_TYPE: mongo
+      API_DATABASE_MONGO_URI: 'user:!PassWD!@mongo'
+    depends_on:
+      - mongo
+    networks:
+      - api
+    dns_search: ''
+    ports:
+      - 8080:8080
+
+  mongo:
+    image: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: user
+      MONGO_INITDB_ROOT_PASSWORD: '!PassWD!'
+    volumes:
+      - api-data:/data/db
+    command: mongod --smallfiles --bind_ip_all
+    ports:
+      - 27017:27017
+    networks:
+      - api
+
+networks:
+  api:
+
+volumes:
+  api-data:

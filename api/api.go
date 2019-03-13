@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/globalsign/mgo"
 	"github.com/go-chi/chi"
@@ -18,12 +19,21 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+func Now() *time.Time {
+	now := time.Now()
+	return &now
+}
+
 var (
 	mongo        *mgo.Session
 	mongoHealthy bool
 	config       *APIConfig
 	store        PaymentStore
 )
+
+func Config() *APIConfig {
+	return config
+}
 
 // NotFound is the default handler that is called when an unknown route is
 // called. It will return the following body:
@@ -123,27 +133,26 @@ func (p *SavePaymentReq) Bind(req *http.Request) error {
 	return nil
 }
 
-// SavePayment will read the request's body and create a new payment in the
-// data source
+// SavePayment will read the request's body and create or update a payment in
+// the data source
 func SavePayment(w http.ResponseWriter, r *http.Request) {
-	var payment *Payment
-	p := NewSavePaymentReq()
-	if err := render.Bind(r, p); err != nil {
+	code := http.StatusCreated
+	payload := NewSavePaymentReq()
+	if err := render.Bind(r, payload); err != nil {
 		handleError(w, r, ErrInvalidInput)
 		return
 	}
-	if pCtx := r.Context().Value("payment"); pCtx == nil {
-		payment = p.Payment
-	} else {
-		payment = pCtx.(*Payment)
-		p.CreatedAt = payment.CreatedAt
-		p.UpdatedAt = payment.UpdatedAt
+	if pCtx, ok := r.Context().Value("payment").(*Payment); ok {
+		code = http.StatusOK
+		payload.Payment.ID = pCtx.ID
+		payload.CreatedAt = pCtx.CreatedAt
+		payload.UpdatedAt = pCtx.UpdatedAt
 	}
-	if err := store.Save(p.Payment); err != nil {
+	if err := store.Save(payload.Payment); err != nil {
 		handleError(w, r, err)
 		return
 	}
-	render.Render(w, r, NewJSENDData(p))
+	render.Render(w, r, NewJSENDData(payload, code))
 }
 
 // DeletePayment removes a payment from the datasource
@@ -214,6 +223,9 @@ func Start() error {
 	var err error
 	logrus.Infof("Starting server on %s", srv.Addr)
 	if config.GetTLS() {
+		logrus.Info("TLS Enabled")
+		logrus.Debug("Loading cert: ", config.TLSCert)
+		logrus.Debug("Loading key: ", config.TLSKey)
 		err = srv.ListenAndServeTLS(config.TLSCert, config.TLSKey)
 	} else {
 		err = srv.ListenAndServe()

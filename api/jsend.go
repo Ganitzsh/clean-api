@@ -34,7 +34,7 @@ func NewJSENDData(data interface{}, code ...int) *JSENDData {
 
 func (p *JSENDData) Render(w http.ResponseWriter, r *http.Request) error {
 	status := JSENDDataStatusSuccess
-	code := http.StatusOK
+	code := p.Code
 	if apiError, ok := p.Data.(*APIError); ok {
 		status = JSENDDataStatusError
 		code = http.StatusInternalServerError

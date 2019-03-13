@@ -58,7 +58,7 @@ func mongoHealthCheck() {
 					err, attempts, config.Mongo.MaxRetries,
 				)
 				if attempts >= config.Mongo.MaxRetries {
-					logrus.Fatalf("Could not reach database afer %d attempts", attempts)
+					logrus.Fatalf("could not reach database afer %d attempts", attempts)
 				}
 			} else {
 				mongoHealthy = true
@@ -68,23 +68,24 @@ func mongoHealthCheck() {
 				attempts = 0
 			}
 		}
-		time.Sleep(1 * time.Second)
+		time.Sleep(3 * time.Second)
 	}
 }
 
 func getMongoCollection() (*MgoWrapCollection, error) {
 	var err error
-	logrus.Info("Mongo: Connecting")
-	mongo, err = mgo.DialWithTimeout(config.Mongo.URI, 1*time.Second)
+	logrus.Info("Mongo: connecting")
+	mongo, err = mgo.Dial(config.Mongo.URI)
 	if err != nil {
 		return nil, err
 	}
+	mongo.SetSocketTimeout(2 * time.Second)
 	if err = mongo.Ping(); err != nil {
-		return nil, errors.New("Could not ping the database")
+		return nil, errors.New("could not ping the database")
 	}
 	db := mongo.DB(config.Mongo.Database)
 	if _, err = db.CollectionNames(); err != nil {
-		return nil, errors.New("Could not retrieve collections, are you logged in?")
+		return nil, errors.New("could not retrieve collections, are you logged in?")
 	}
 	mongoHealthy = true
 	go mongoHealthCheck()
@@ -102,13 +103,14 @@ func initMongo() {
 				err, attempts, config.Mongo.MaxRetries,
 			)
 			if attempts >= config.Mongo.MaxRetries {
-				logrus.Fatalf("Could not reach database afer %d attempts", attempts)
+				logrus.Fatalf("Mongo: could not reach database afer %d attempts", attempts)
 			}
 		} else {
 			store = NewPaymentMongoStore(c)
 			break
 		}
 	}
+	logrus.Info("Mongo: ready")
 }
 
 func InitStore() {
@@ -117,9 +119,11 @@ func InitStore() {
 	}
 	switch config.DBType {
 	case DatabaseTypeInMem:
+		logrus.Info("Loading in memory store")
 		store = NewPaymentInMemStore()
 		break
 	case DatabaseTypeMongo:
+		logrus.Info("Loding MongoDB store")
 		initMongo()
 		break
 	default:
