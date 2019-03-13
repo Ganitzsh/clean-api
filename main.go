@@ -7,7 +7,7 @@ import (
 
 func init() {
 	api.InitConfig()
-	// api.InitStore(api.NewPaymentInMemStore())
+	api.InitStore()
 }
 
 func main() {

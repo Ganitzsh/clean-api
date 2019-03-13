@@ -20,23 +20,35 @@ func NewCORSSettings() *CORSSettings {
 	}
 }
 
+type MongoSettings struct {
+	Database   string `json:"database"`
+	URI        string `json:"uri"`
+	Collection string `json:"collection"`
+	MaxRetries int    `json:"max_retries"`
+}
+
+func NewMongoSettings() *MongoSettings {
+	return &MongoSettings{
+		Database:   viper.GetString(ConfigKeyMongoDatabase),
+		URI:        viper.GetString(ConfigKeyMongoURI),
+		Collection: viper.GetString(ConfigKeyMongoCollection),
+		MaxRetries: viper.GetInt(ConfigKeyMongoMaxRetries),
+	}
+}
+
 type DatabaseType string
 
-const (
-	DatabaseTypeInMem = "inmem"
-	DatabaseTypeMongo = "mongo"
-)
-
 type APIConfig struct {
-	DatabaseType `json:"database"`
-	NodeName     string        `json:"node_name"`
-	DevMode      bool          `json:"dev_mode"`
-	Host         string        `json:"host" validate:"required"`
-	Port         string        `json:"port" validate:"required"`
-	TLS          bool          `json:"tls"`
-	TLSKey       string        `json:"tls_key"`
-	TLSCert      string        `json:"tls_cert"`
-	Cors         *CORSSettings `json:"cors"`
+	DBType   DatabaseType   `json:"database"`
+	NodeName string         `json:"node_name"`
+	DevMode  bool           `json:"dev_mode"`
+	Host     string         `json:"host" validate:"required"`
+	Port     string         `json:"port" validate:"required"`
+	TLS      bool           `json:"tls"`
+	TLSKey   string         `json:"tls_key"`
+	TLSCert  string         `json:"tls_cert"`
+	Cors     *CORSSettings  `json:"cors"`
+	Mongo    *MongoSettings `json:"mongo"`
 }
 
 // NewAPIConfig creates a new APIConfig struct.
@@ -50,6 +62,8 @@ func NewAPIConfig() *APIConfig {
 		TLSKey:   viper.GetString(ConfigKeyTLSKey),
 		TLSCert:  viper.GetString(ConfigKeyTLSCert),
 		Cors:     NewCORSSettings(),
+		DBType:   DatabaseType(viper.GetString(ConfigKeyDatabaseType)),
+		Mongo:    NewMongoSettings(),
 	}
 }
 

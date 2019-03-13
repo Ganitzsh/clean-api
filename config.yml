@@ -15,4 +15,9 @@ cors:
     - PUT
     - OPTIONS
 
-mongo:
+database:
+  type: mongo
+  mongo:
+    database: api
+    collection: payments
+    uri: user:password@localhost

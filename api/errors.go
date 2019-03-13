@@ -14,7 +14,11 @@ type APIError struct {
 }
 
 func (e APIError) Error() string {
-	return e.Message
+	ret := e.Message
+	if e.Err != nil {
+		ret += ": " + e.Err.Error()
+	}
+	return ret
 }
 
 func (e *APIError) Render(w http.ResponseWriter, r *http.Request) error {
@@ -43,6 +47,12 @@ var (
 		Message:    "Feature not implemented",
 		StatusCode: http.StatusNotFound,
 		AppCode:    "not_implemented",
+		DataError:  false,
+	}
+	ErrAPIMaintainance = &APIError{
+		Message:    "Maintenance is being done on the API",
+		StatusCode: http.StatusServiceUnavailable,
+		AppCode:    "undergoing_maintenance",
 		DataError:  false,
 	}
 	ErrNotFound = &APIError{

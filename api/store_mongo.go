@@ -31,11 +31,35 @@ type MgoWrapQuery struct {
 }
 
 func (q *MgoWrapQuery) Skip(n int) MongoQuery {
-	return &MgoWrapQuery{}
+	if q.Query == nil {
+		return q
+	}
+	return &MgoWrapQuery{Query: q.Query.Skip(n)}
 }
 
 func (q *MgoWrapQuery) Limit(n int) MongoQuery {
-	return &MgoWrapQuery{}
+	if q.Query == nil {
+		return q
+	}
+	return &MgoWrapQuery{Query: q.Query.Limit(n)}
+}
+
+type MgoWrapCollection struct {
+	*mgo.Collection
+}
+
+func (c *MgoWrapCollection) FindId(id interface{}) MongoQuery {
+	if c.Collection == nil {
+		return nil
+	}
+	return &MgoWrapQuery{Query: c.Collection.FindId(id)}
+}
+
+func (c *MgoWrapCollection) Find(query interface{}) MongoQuery {
+	if c.Collection == nil {
+		return nil
+	}
+	return &MgoWrapQuery{Query: c.Collection.Find(query)}
 }
 
 type PaymentMongoStore struct {

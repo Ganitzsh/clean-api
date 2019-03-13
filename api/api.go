@@ -9,6 +9,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/globalsign/mgo"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
@@ -18,12 +19,31 @@ import (
 )
 
 var (
-	config = NewAPIConfig()
-	store  PaymentStore
+	mongo        *mgo.Session
+	mongoHealthy bool
+	config       *APIConfig
+	store        PaymentStore
 )
 
 func NotFound(w http.ResponseWriter, r *http.Request) {
 	render.Render(w, r, NewJSENDData(ErrNotFound))
+}
+
+func Ping(w http.ResponseWriter, r *http.Request) {
+	render.NoContent(w, r)
+}
+
+func datasourceHealthy(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch config.DBType {
+		case DatabaseTypeMongo:
+			if mongo == nil || !mongoHealthy {
+				handleError(w, r, ErrAPIMaintainance)
+				return
+			}
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 func paymentContext(next http.Handler) http.Handler {
@@ -70,8 +90,6 @@ func NewSavePaymentReq() *SavePaymentReq {
 
 func (p *SavePaymentReq) Bind(req *http.Request) error {
 	// TODO: Validate
-	p.CreatedAt = nil
-	p.UpdatedAt = nil
 	return nil
 }
 
@@ -120,8 +138,11 @@ func Routes() http.Handler {
 	if !config.DevMode {
 		r.Use(middleware.Logger)
 	}
+	r.Use(datasourceHealthy)
 	r.NotFound(NotFound)
+	r.Get("/ping", Ping)
 	r.Route("/payments", func(r chi.Router) {
+		r.Use()
 		r.Get(URLRoot, ListPayments)
 		r.Post(URLRoot, SavePayment)
 		r.Route("/{paymentID}", func(r chi.Router) {
@@ -148,6 +169,10 @@ func Start() error {
 		<-sigint
 		if err := srv.Shutdown(context.Background()); err != nil {
 			logrus.Fatalf("Could not shutdown: %v", err)
+		}
+		if mongo != nil {
+			logrus.Info("Closing connection to Mongo")
+			mongo.Close()
 		}
 		close(done)
 	}()

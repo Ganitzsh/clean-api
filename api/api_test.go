@@ -13,6 +13,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func init() {
+	api.InitConfig()
+}
+
 func readErrorCode(body []byte) string {
 	if body == nil || len(body) == 0 {
 		return ""
@@ -58,7 +62,7 @@ func TestWrongContentType(t *testing.T) {
 }
 
 func testListPayments(db *mockDB) func(*testing.T) {
-	api.InitStore(db.Store)
+	api.SetStore(db.Store)
 	handler := api.Routes()
 	return func(t *testing.T) {
 		resp := doHTTPReq(handler, http.MethodGet, "/payments", "")
@@ -73,7 +77,7 @@ func testListPayments(db *mockDB) func(*testing.T) {
 }
 
 func testGetPayment(db *mockDB) func(*testing.T) {
-	api.InitStore(db.Store)
+	api.SetStore(db.Store)
 	handler := api.Routes()
 	return func(t *testing.T) {
 		resp := doHTTPReq(handler, http.MethodGet, "/payments/unknown", "")
@@ -95,7 +99,7 @@ func testGetPayment(db *mockDB) func(*testing.T) {
 }
 
 func testSavePayment(db *mockDB) func(*testing.T) {
-	api.InitStore(db.Store)
+	api.SetStore(db.Store)
 	return func(t *testing.T) {
 		handler := api.Routes()
 		resp := doHTTPReq(handler, http.MethodPost, "/payments", "")
@@ -137,7 +141,7 @@ func testSavePayment(db *mockDB) func(*testing.T) {
 }
 
 func testDeletePayment(db *mockDB) func(*testing.T) {
-	api.InitStore(db.Store)
+	api.SetStore(db.Store)
 	handler := api.Routes()
 	return func(t *testing.T) {
 		resp := doHTTPReq(handler, http.MethodDelete, "/payments/"+uuid.New().String(), "")
