@@ -5,9 +5,11 @@ import (
 	"strconv"
 
 	"github.com/go-chi/render"
+	"github.com/sirupsen/logrus"
 )
 
 func handleError(w http.ResponseWriter, r *http.Request, err error) {
+	logrus.Error(err)
 	if apiErr, ok := err.(*APIError); ok {
 		render.Render(w, r, NewJSENDData(apiErr))
 		return
