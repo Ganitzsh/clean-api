@@ -9,18 +9,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type MgoWrapQuery struct {
-	*mgo.Query
-}
-
-func (q *MgoWrapQuery) Skip(n int) MongoQuery {
-	return &MgoWrapQuery{}
-}
-
-func (q *MgoWrapQuery) Limit(n int) MongoQuery {
-	return &MgoWrapQuery{}
-}
-
 // MongoQuery interfaces the *mgo.Query type
 type MongoQuery interface {
 	All(result interface{}) error
@@ -36,6 +24,18 @@ type MongoCollection interface {
 	Insert(docs ...interface{}) error
 	Find(query interface{}) MongoQuery
 	Count() (int, error)
+}
+
+type MgoWrapQuery struct {
+	*mgo.Query
+}
+
+func (q *MgoWrapQuery) Skip(n int) MongoQuery {
+	return &MgoWrapQuery{}
+}
+
+func (q *MgoWrapQuery) Limit(n int) MongoQuery {
+	return &MgoWrapQuery{}
 }
 
 type PaymentMongoStore struct {

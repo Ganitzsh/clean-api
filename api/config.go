@@ -20,15 +20,23 @@ func NewCORSSettings() *CORSSettings {
 	}
 }
 
+type DatabaseType string
+
+const (
+	DatabaseTypeInMem = "inmem"
+	DatabaseTypeMongo = "mongo"
+)
+
 type APIConfig struct {
-	NodeName string        `json:"node_name"`
-	DevMode  bool          `json:"dev_mode"`
-	Host     string        `json:"host" validate:"required"`
-	Port     string        `json:"port" validate:"required"`
-	TLS      bool          `json:"tls"`
-	TLSKey   string        `json:"tls_key"`
-	TLSCert  string        `json:"tls_cert"`
-	Cors     *CORSSettings `json:"cors"`
+	DatabaseType `json:"database"`
+	NodeName     string        `json:"node_name"`
+	DevMode      bool          `json:"dev_mode"`
+	Host         string        `json:"host" validate:"required"`
+	Port         string        `json:"port" validate:"required"`
+	TLS          bool          `json:"tls"`
+	TLSKey       string        `json:"tls_key"`
+	TLSCert      string        `json:"tls_cert"`
+	Cors         *CORSSettings `json:"cors"`
 }
 
 // NewAPIConfig creates a new APIConfig struct.
