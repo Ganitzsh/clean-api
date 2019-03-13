@@ -8,6 +8,14 @@ import (
 
 type APIVersion int32
 
+// PaginatedList is an object containing the results of a query in the store
+// that returns a slice.
+type PaginatedList struct {
+	Total    int         `json:"total"`
+	SubTotal int         `json:"subTotal"`
+	Results  interface{} `json:"results"`
+}
+
 // PaymentStore defines what a PaymentStore should be able to do
 type PaymentStore interface {
 	// Total should return the total of payments in the data store and return 0
@@ -16,7 +24,7 @@ type PaymentStore interface {
 
 	// GetMany will take different parameters and should return a list of Payments
 	// accordingly
-	GetMany(limit, offset int, filters ...*PaymentStoreFilter) ([]*Payment, error)
+	GetMany(limit, offset int, filters ...*PaymentStoreFilter) (*PaginatedList, error)
 
 	// GetByID should return a single payment corresponding to the given ID
 	GetByID(id uuid.UUID) (*Payment, error)

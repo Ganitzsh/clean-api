@@ -5,6 +5,7 @@ require (
 	github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8
 	github.com/go-chi/chi v4.0.2+incompatible
 	github.com/go-chi/cors v1.0.0
+	github.com/go-chi/docgen v1.0.5
 	github.com/go-chi/render v1.0.1
 	github.com/google/uuid v1.1.1
 	github.com/icrowley/fake v0.0.0-20180203215853-4178557ae428

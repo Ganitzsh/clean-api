@@ -1,0 +1,482 @@
+{
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json",
+    "Extension:",
+    "x-go-name"
+  ],
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "swagger": "2.0",
+  "info": {
+    "title": "Payment API.",
+    "termsOfService": "there are no TOS at this moment, use at your own risk we take no responsibility",
+    "version": "0.0.1"
+  },
+  "host": "localhost",
+  "basePath": "/v1",
+  "paths": {
+    "/payments": {
+      "get": {
+        "description": "This will show a list of payments stored in the database",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "payments"
+        ],
+        "summary": "Lists payments with pagination",
+        "operationId": "listPayments",
+        "responses": {
+          "200": {
+            "$ref": "#/responses/paymentList"
+          }
+        }
+      }
+    },
+    "/payments/{id}": {
+      "get": {
+        "description": "Retrieves a single payment",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "payments"
+        ],
+        "operationId": "getPayment",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "ID",
+            "description": "The ID of the payment",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/singlePayment"
+          },
+          "400": {
+            "$ref": "#/responses/reqError"
+          },
+          "404": {
+            "$ref": "#/responses/reqError"
+          }
+        }
+      },
+      "post": {
+        "description": "Creates or update a payment. When id is specified, updates the given payment",
+        "tags": [
+          "payments"
+        ],
+        "operationId": "savePayment",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "ID",
+            "description": "The ID of the payment",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/singlePayment"
+          },
+          "201": {
+            "$ref": "#/responses/singlePayment"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "payments"
+        ],
+        "summary": "Deletes a pet from the store.",
+        "operationId": "deletePayment",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "ID",
+            "description": "The ID of the payment",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {},
+          "default": {
+            "$ref": "#/responses/reqError"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "ErrorCode": {
+      "description": "ErrorCode is a standarized string that identifies issues across the API",
+      "type": "string",
+      "x-go-package": "github.com/ganitzsh/f3-te/api"
+    },
+    "Payment": {
+      "description": "Payment represents a payment",
+      "type": "object",
+      "properties": {
+        "amount": {
+          "type": "string",
+          "x-go-name": "Amount"
+        },
+        "beneficiary": {
+          "$ref": "#/definitions/PaymentParty"
+        },
+        "chargesInformation": {
+          "type": "object",
+          "properties": {
+            "bearerCode": {
+              "type": "string",
+              "x-go-name": "BearerCode"
+            },
+            "receiverChargesAmount": {
+              "type": "string",
+              "x-go-name": "ReceiverChargesAmount"
+            },
+            "receiverChargesCurrency": {
+              "type": "string",
+              "x-go-name": "ReceiverChargesCurrency"
+            },
+            "senderCharges": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "amount": {
+                    "type": "string",
+                    "x-go-name": "Amount"
+                  },
+                  "currency": {
+                    "type": "string",
+                    "x-go-name": "Currency"
+                  }
+                }
+              },
+              "x-go-name": "SenderCharges"
+            }
+          },
+          "x-go-name": "ChargesInformation"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "CreatedAt"
+        },
+        "currency": {
+          "type": "string",
+          "x-go-name": "Currency"
+        },
+        "debitorParty": {
+          "$ref": "#/definitions/PaymentParty"
+        },
+        "endToEndReference": {
+          "type": "string",
+          "x-go-name": "EndToEndReference"
+        },
+        "fx": {
+          "type": "object",
+          "properties": {
+            "contractReference": {
+              "type": "string",
+              "x-go-name": "ContractReference"
+            },
+            "exchangeRate": {
+              "type": "string",
+              "x-go-name": "ExchangeRate"
+            },
+            "originalAmount": {
+              "type": "string",
+              "x-go-name": "OriginalAmount"
+            },
+            "originalCurrency": {
+              "type": "string",
+              "x-go-name": "OriginalCurrency"
+            }
+          },
+          "x-go-name": "FX"
+        },
+        "id": {
+          "$ref": "#/definitions/UUID"
+        },
+        "numericReference": {
+          "type": "string",
+          "x-go-name": "NumericReference"
+        },
+        "processingDate": {
+          "type": "string",
+          "x-go-name": "ProcessingDate"
+        },
+        "purpose": {
+          "type": "string",
+          "x-go-name": "Purpose"
+        },
+        "reference": {
+          "type": "string",
+          "x-go-name": "Reference"
+        },
+        "scheme": {
+          "type": "string",
+          "x-go-name": "Scheme"
+        },
+        "schemePaymentSubType": {
+          "type": "string",
+          "x-go-name": "SchemePaymentSubType"
+        },
+        "schemePaymentType": {
+          "type": "string",
+          "x-go-name": "SchemePaymentType"
+        },
+        "type": {
+          "type": "string",
+          "x-go-name": "Type"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "UpdatedAt"
+        }
+      },
+      "x-go-package": "github.com/ganitzsh/f3-te/api"
+    },
+    "PaymentParty": {
+      "type": "object",
+      "properties": {
+        "accountName": {
+          "type": "string",
+          "x-go-name": "AccountName"
+        },
+        "accountNumber": {
+          "type": "string",
+          "x-go-name": "AccountNumber"
+        },
+        "accountNumberCode": {
+          "type": "string",
+          "x-go-name": "AccountNumberCode"
+        },
+        "address": {
+          "type": "string",
+          "x-go-name": "Address"
+        },
+        "bankId": {
+          "type": "string",
+          "x-go-name": "BankID"
+        },
+        "bankIdCode": {
+          "type": "string",
+          "x-go-name": "BankIDCode"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        }
+      },
+      "x-go-package": "github.com/ganitzsh/f3-te/api"
+    },
+    "UUID": {
+      "description": "A UUID is a 128 bit (16 byte) Universal Unique IDentifier as defined in RFC\n4122.",
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "format": "uint8"
+      },
+      "x-go-package": "github.com/ganitzsh/f3-te/vendor/github.com/google/uuid"
+    }
+  },
+  "responses": {
+    "paymentList": {
+      "description": "List of payments with paging info",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/Payment"
+            },
+            "x-go-name": "Results"
+          },
+          "subTotal": {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "SubTotal"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "Total"
+          }
+        }
+      }
+    },
+    "reqError": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "$ref": "#/definitions/ErrorCode"
+          },
+          "error": {
+            "type": "string",
+            "x-go-name": "Message"
+          }
+        }
+      }
+    },
+    "singlePayment": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "string",
+            "x-go-name": "Amount"
+          },
+          "beneficiary": {
+            "$ref": "#/definitions/PaymentParty"
+          },
+          "chargesInformation": {
+            "type": "object",
+            "properties": {
+              "bearerCode": {
+                "type": "string",
+                "x-go-name": "BearerCode"
+              },
+              "receiverChargesAmount": {
+                "type": "string",
+                "x-go-name": "ReceiverChargesAmount"
+              },
+              "receiverChargesCurrency": {
+                "type": "string",
+                "x-go-name": "ReceiverChargesCurrency"
+              },
+              "senderCharges": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "amount": {
+                      "type": "string",
+                      "x-go-name": "Amount"
+                    },
+                    "currency": {
+                      "type": "string",
+                      "x-go-name": "Currency"
+                    }
+                  }
+                },
+                "x-go-name": "SenderCharges"
+              }
+            },
+            "x-go-name": "ChargesInformation"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "x-go-name": "CreatedAt"
+          },
+          "currency": {
+            "type": "string",
+            "x-go-name": "Currency"
+          },
+          "debitorParty": {
+            "$ref": "#/definitions/PaymentParty"
+          },
+          "endToEndReference": {
+            "type": "string",
+            "x-go-name": "EndToEndReference"
+          },
+          "fx": {
+            "type": "object",
+            "properties": {
+              "contractReference": {
+                "type": "string",
+                "x-go-name": "ContractReference"
+              },
+              "exchangeRate": {
+                "type": "string",
+                "x-go-name": "ExchangeRate"
+              },
+              "originalAmount": {
+                "type": "string",
+                "x-go-name": "OriginalAmount"
+              },
+              "originalCurrency": {
+                "type": "string",
+                "x-go-name": "OriginalCurrency"
+              }
+            },
+            "x-go-name": "FX"
+          },
+          "id": {
+            "$ref": "#/definitions/UUID"
+          },
+          "numericReference": {
+            "type": "string",
+            "x-go-name": "NumericReference"
+          },
+          "processingDate": {
+            "type": "string",
+            "x-go-name": "ProcessingDate"
+          },
+          "purpose": {
+            "type": "string",
+            "x-go-name": "Purpose"
+          },
+          "reference": {
+            "type": "string",
+            "x-go-name": "Reference"
+          },
+          "scheme": {
+            "type": "string",
+            "x-go-name": "Scheme"
+          },
+          "schemePaymentSubType": {
+            "type": "string",
+            "x-go-name": "SchemePaymentSubType"
+          },
+          "schemePaymentType": {
+            "type": "string",
+            "x-go-name": "SchemePaymentType"
+          },
+          "type": {
+            "type": "string",
+            "x-go-name": "Type"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "x-go-name": "UpdatedAt"
+          }
+        }
+      }
+    }
+  }
+}

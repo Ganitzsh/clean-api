@@ -1,3 +1,26 @@
+//go:generate swagger generate spec
+
+// Package api Payment API.
+//
+// Terms Of Service:
+//
+// there are no TOS at this moment, use at your own risk we take no responsibility
+//
+//     Schemes: http, https
+//     Host: localhost
+//     BasePath: /v1
+//     Version: 0.0.1
+//
+//     Consumes:
+//     - application/json
+//
+//     Produces:
+//     - application/json
+//
+//     Extension:
+//     x-go-name
+//
+// swagger:meta
 package api
 
 import (
@@ -100,7 +123,22 @@ func paymentContext(next http.Handler) http.Handler {
 	})
 }
 
-// ListPayments returns a list of payments with the given params of the request
+// swagger:route GET /payments payments listPayments
+//
+// Lists payments with pagination
+//
+// This will show a list of payments stored in the database
+//
+//     Consumes:
+//     - application/json
+//
+//     Produces:
+//     - application/json
+//
+//     Schemes: http, https
+//
+//     Responses:
+//       200: paymentList
 func ListPayments(w http.ResponseWriter, r *http.Request) {
 	limit, offset := readLimOff(r)
 	ret, err := store.GetMany(limit, offset)
@@ -111,7 +149,22 @@ func ListPayments(w http.ResponseWriter, r *http.Request) {
 	render.Render(w, r, NewJSENDData(ret, http.StatusOK))
 }
 
-// GetPayment will return a single payment
+// swagger:route GET /payments/{id} payments getPayment
+//
+// Retrieves a single payment
+//
+//     Consumes:
+//     	- application/json
+//
+//     Produces:
+//     	- application/json
+//
+//     Schemes: http, https
+//
+//     Responses:
+//       200: singlePayment
+//       404: reqError
+//       400: reqError
 func GetPayment(w http.ResponseWriter, r *http.Request) {
 	render.Render(w, r, NewJSENDData(
 		r.Context().Value("payment"),
@@ -135,6 +188,13 @@ func (p *SavePaymentReq) Bind(req *http.Request) error {
 
 // SavePayment will read the request's body and create or update a payment in
 // the data source
+// swagger:route POST /payments/{id} payments savePayment
+//
+// Creates or update a payment. When id is specified, updates the given payment
+//
+// Responses:
+//    201: singlePayment
+//		200: singlePayment
 func SavePayment(w http.ResponseWriter, r *http.Request) {
 	code := http.StatusCreated
 	payload := NewSavePaymentReq()
@@ -156,6 +216,13 @@ func SavePayment(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeletePayment removes a payment from the datasource
+// swagger:route DELETE /payments/{id} payments deletePayment
+//
+// Deletes a pet from the store.
+//
+// Responses:
+//    default: reqError
+//        204:
 func DeletePayment(w http.ResponseWriter, r *http.Request) {
 	payment := r.Context().Value("payment").(*Payment)
 	if err := store.Delete(payment.ID); err != nil {
@@ -168,32 +235,36 @@ func DeletePayment(w http.ResponseWriter, r *http.Request) {
 // Routes initializes the multiplexer and returns the http.Handler
 func Routes() http.Handler {
 	r := chi.NewRouter()
-	cors := cors.New(cors.Options{
-		AllowedOrigins:   config.Cors.AllowedOrigins,
-		AllowedMethods:   config.Cors.AllowedMethods,
-		AllowedHeaders:   config.Cors.AllowedHeaders,
-		AllowCredentials: true,
-		MaxAge:           300,
-	})
-	r.Use(cors.Handler)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.AllowContentType(strings.Split(APIV1ContentTypes, ",")...))
-	if !config.DevMode {
-		r.Use(middleware.Logger)
+	if config != nil {
+		cors := cors.New(cors.Options{
+			AllowedOrigins:   config.Cors.AllowedOrigins,
+			AllowedMethods:   config.Cors.AllowedMethods,
+			AllowedHeaders:   config.Cors.AllowedHeaders,
+			AllowCredentials: true,
+			MaxAge:           300,
+		})
+		r.Use(cors.Handler)
+		if !config.DevMode {
+			r.Use(middleware.Logger)
+		}
 	}
 	r.Use(datasourceHealthy)
 	r.NotFound(NotFound)
-	r.Get("/ping", Ping)
-	r.Route("/payments", func(r chi.Router) {
-		r.Use()
-		r.Get(URLRoot, ListPayments)
-		r.Post(URLRoot, SavePayment)
-		r.Route("/{paymentID}", func(r chi.Router) {
-			r.Use(paymentContext)
-			r.Get(URLRoot, GetPayment)
-			r.Put(URLRoot, SavePayment)
+	r.Route(APIV1Prefix, func(r chi.Router) {
+		r.Get("/ping", Ping)
+		r.Route("/payments", func(r chi.Router) {
+			r.Use()
+			r.Get(URLRoot, ListPayments)
 			r.Post(URLRoot, SavePayment)
-			r.Delete(URLRoot, DeletePayment)
+			r.Route("/{paymentID}", func(r chi.Router) {
+				r.Use(paymentContext)
+				r.Get(URLRoot, GetPayment)
+				r.Put(URLRoot, SavePayment)
+				r.Post(URLRoot, SavePayment)
+				r.Delete(URLRoot, DeletePayment)
+			})
 		})
 	})
 	return r
@@ -221,7 +292,7 @@ func Start() error {
 		close(done)
 	}()
 	var err error
-	logrus.Infof("Starting server on %s", srv.Addr)
+	logrus.Infof("Starting server on %s", config.GetHostURL())
 	if config.GetTLS() {
 		logrus.Info("TLS Enabled")
 		logrus.Debug("Loading cert: ", config.TLSCert)

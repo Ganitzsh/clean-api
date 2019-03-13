@@ -5,14 +5,17 @@ import (
 	"net/http"
 )
 
+// ErrorCode is a standarized string that identifies issues across the API
 type ErrorCode string
 
+// APIError is the content that is returned on error
 type APIError struct {
-	DataError  bool      `json:"-"`
-	Message    string    `json:"error"`
-	StatusCode int       `json:"-"`
-	AppCode    ErrorCode `json:"code,omitempty"`
-	Err        error     `json:"-"`
+	Message string    `json:"error"`
+	AppCode ErrorCode `json:"code,omitempty"`
+
+	DataError  bool  `json:"-"`
+	StatusCode int   `json:"-"`
+	Err        error `json:"-"`
 }
 
 func (e APIError) Error() string {

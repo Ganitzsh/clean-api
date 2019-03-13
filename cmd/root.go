@@ -14,6 +14,7 @@ var rootCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(healthcheckCmd)
+	rootCmd.AddCommand(docgenCmd)
 }
 
 func Execute(mainFunc func()) {

@@ -21,9 +21,14 @@ func readLimOff(r *http.Request) (lim int, off int) {
 	if r == nil {
 		return 0, 0
 	}
+
 	val, err := strconv.Atoi(r.URL.Query().Get("lim"))
 	if err == nil {
 		lim = val
+	}
+	val, err = strconv.Atoi(r.URL.Query().Get("page"))
+	if err == nil && lim != 0 && val != 0 {
+		off = val * lim
 	}
 	val, err = strconv.Atoi(r.URL.Query().Get("off"))
 	if err == nil {

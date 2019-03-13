@@ -51,7 +51,7 @@ func TestNotFound(t *testing.T) {
 
 func TestWrongContentType(t *testing.T) {
 	handler := api.Routes()
-	req, _ := http.NewRequest(http.MethodPost, "/payments", bytes.NewBufferString(""))
+	req, _ := http.NewRequest(http.MethodPost, "/v1/payments", bytes.NewBufferString(""))
 	rr := httptest.NewRecorder()
 	req.Header.Add(api.HeaderContentType, "some/madeup-ct")
 	handler.ServeHTTP(rr, req)
@@ -65,7 +65,7 @@ func testListPayments(db *mockDB) func(*testing.T) {
 	api.SetStore(db.Store)
 	handler := api.Routes()
 	return func(t *testing.T) {
-		resp := doHTTPReq(handler, http.MethodGet, "/payments", "")
+		resp := doHTTPReq(handler, http.MethodGet, "/v1/payments", "")
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 		body, _ := ioutil.ReadAll(resp.Body)
 		d := api.JSENDData{Data: []*api.Payment{}}
@@ -80,13 +80,13 @@ func testGetPayment(db *mockDB) func(*testing.T) {
 	api.SetStore(db.Store)
 	handler := api.Routes()
 	return func(t *testing.T) {
-		resp := doHTTPReq(handler, http.MethodGet, "/payments/unknown", "")
+		resp := doHTTPReq(handler, http.MethodGet, "/v1/payments/unknown", "")
 		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 		assert.Equal(t, api.ContentTypeJSON, resp.Header.Get(api.HeaderContentType))
-		resp = doHTTPReq(handler, http.MethodGet, "/payments/"+uuid.New().String(), "")
+		resp = doHTTPReq(handler, http.MethodGet, "/v1/payments/"+uuid.New().String(), "")
 		assert.Equal(t, http.StatusNotFound, resp.StatusCode)
 		assert.Equal(t, api.ContentTypeJSON, resp.Header.Get(api.HeaderContentType))
-		resp = doHTTPReq(handler, http.MethodGet, "/payments/"+db.ID1.String(), "")
+		resp = doHTTPReq(handler, http.MethodGet, "/v1/payments/"+db.ID1.String(), "")
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 		assert.Equal(t, api.ContentTypeJSON, resp.Header.Get(api.HeaderContentType))
 		body, _ := ioutil.ReadAll(resp.Body)
@@ -102,7 +102,7 @@ func testSavePayment(db *mockDB) func(*testing.T) {
 	api.SetStore(db.Store)
 	return func(t *testing.T) {
 		handler := api.Routes()
-		resp := doHTTPReq(handler, http.MethodPost, "/payments", "")
+		resp := doHTTPReq(handler, http.MethodPost, "/v1/payments", "")
 		body, _ := ioutil.ReadAll(resp.Body)
 		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 		assert.Equal(t, api.ErrInvalidInput.AppCode, readErrorCode(body))
@@ -110,7 +110,7 @@ func testSavePayment(db *mockDB) func(*testing.T) {
 		payment := newMockPayment()
 		payment.Amount = "42"
 		b, _ := json.Marshal(payment)
-		resp = doHTTPReq(handler, http.MethodPost, "/payments", string(b))
+		resp = doHTTPReq(handler, http.MethodPost, "/v1/payments", string(b))
 		body, _ = ioutil.ReadAll(resp.Body)
 		assert.Equal(t, http.StatusCreated, resp.StatusCode)
 		assert.Equal(t, api.ErrorCode(""), readErrorCode(body))
@@ -126,7 +126,7 @@ func testSavePayment(db *mockDB) func(*testing.T) {
 
 		payment.Amount = "84"
 		b, _ = json.Marshal(payment)
-		resp = doHTTPReq(handler, http.MethodPost, "/payments/"+id.String(), string(b))
+		resp = doHTTPReq(handler, http.MethodPost, "/v1/payments/"+id.String(), string(b))
 		body, _ = ioutil.ReadAll(resp.Body)
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 		assert.Equal(t, api.ErrorCode(""), readErrorCode(body))
@@ -144,11 +144,11 @@ func testDeletePayment(db *mockDB) func(*testing.T) {
 	api.SetStore(db.Store)
 	handler := api.Routes()
 	return func(t *testing.T) {
-		resp := doHTTPReq(handler, http.MethodDelete, "/payments/"+uuid.New().String(), "")
+		resp := doHTTPReq(handler, http.MethodDelete, "/v1/payments/"+uuid.New().String(), "")
 		assert.Equal(t, http.StatusNotFound, resp.StatusCode)
-		resp = doHTTPReq(handler, http.MethodDelete, "/payments/"+db.ID1.String(), "")
+		resp = doHTTPReq(handler, http.MethodDelete, "/v1/payments/"+db.ID1.String(), "")
 		assert.Equal(t, http.StatusNoContent, resp.StatusCode)
-		resp = doHTTPReq(handler, http.MethodGet, "/payments/"+db.ID1.String(), "")
+		resp = doHTTPReq(handler, http.MethodGet, "/v1/payments/"+db.ID1.String(), "")
 		assert.Equal(t, http.StatusNotFound, resp.StatusCode)
 	}
 }

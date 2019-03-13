@@ -21,6 +21,18 @@ func NewPaymentQuery() *PaymentQuery {
 	return &PaymentQuery{}
 }
 
+func (q *PaymentQuery) Count() (n int, err error) {
+	filters := []*api.PaymentStoreFilter{}
+	if val, ok := q.query["scheme"].(string); ok {
+		filters = append(filters, api.PaymentStoreFilterIsScheme(val))
+	}
+	tmp, err := q.store.GetMany(q.limit, q.skip, filters...)
+	if err != nil {
+		return 0, err
+	}
+	return tmp.Total, nil
+}
+
 func (q *PaymentQuery) All(results interface{}) error {
 	ret := results.(*[]*api.Payment)
 	filters := []*api.PaymentStoreFilter{}
@@ -31,7 +43,7 @@ func (q *PaymentQuery) All(results interface{}) error {
 	if err != nil {
 		return err
 	}
-	for _, d := range tmp {
+	for _, d := range tmp.Results.([]*api.Payment) {
 		*ret = append(*ret, d)
 	}
 	return nil

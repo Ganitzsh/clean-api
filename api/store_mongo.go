@@ -15,6 +15,7 @@ import (
 type MongoQuery interface {
 	All(result interface{}) error
 	One(result interface{}) error
+	Count() (n int, err error)
 	Skip(n int) MongoQuery
 	Limit(n int) MongoQuery
 }
@@ -81,7 +82,7 @@ func (store *PaymentMongoStore) Total() int {
 func (store *PaymentMongoStore) GetMany(
 	limit, offset int,
 	filters ...*PaymentStoreFilter,
-) ([]*Payment, error) {
+) (*PaginatedList, error) {
 	ret := []*Payment{}
 	query := bson.M{}
 	if filters != nil {
@@ -111,14 +112,23 @@ func (store *PaymentMongoStore) GetMany(
 			}
 		}
 	}
-	q := store.Find(query).Skip(offset)
+	q := store.Find(query)
+	total, err := q.Count()
+	if err != nil {
+		return nil, ErrSomethingWentWrong(err)
+	}
+	q = q.Skip(offset)
 	if limit > 0 {
 		q = q.Limit(limit)
 	}
 	if err := q.All(&ret); err != nil {
 		return nil, ErrSomethingWentWrong(err)
 	}
-	return ret, nil
+	return &PaginatedList{
+		Total:    total,
+		SubTotal: len(ret),
+		Results:  ret,
+	}, nil
 }
 
 func (store *PaymentMongoStore) GetByID(id uuid.UUID) (*Payment, error) {

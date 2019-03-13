@@ -16,6 +16,7 @@ type PaymentParty struct {
 	Address           string `json:"address"`
 }
 
+// Payment represents a payment
 type Payment struct {
 	ID                   uuid.UUID     `json:"id" bson:"_id,omitempty"`
 	CreatedAt            *time.Time    `json:"createdAt"`

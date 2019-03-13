@@ -34,10 +34,10 @@ func PaymentStoreFilterIsScheme(typ string) *PaymentStoreFilter {
 func (store *PaymentInMemStore) GetMany(
 	limit, offset int,
 	filters ...*PaymentStoreFilter,
-) ([]*Payment, error) {
+) (*PaginatedList, error) {
 	to := limit + offset
 	if to > len(store.Database) {
-		return []*Payment{}, nil
+		return &PaginatedList{Results: []*Payment{}}, nil
 	}
 	subset := []*Payment{}
 	if filters != nil && len(filters) > 0 {
@@ -59,16 +59,31 @@ func (store *PaymentInMemStore) GetMany(
 	} else {
 		subset = append(subset, store.Database...)
 	}
+	total := len(subset)
 	if offset > len(subset) {
-		return []*Payment{}, nil
+		return &PaginatedList{Results: []*Payment{}}, nil
 	}
 	if offset == 0 && limit == 0 {
-		return subset, nil
+		return &PaginatedList{
+			Total:    total,
+			SubTotal: len(subset),
+			Results:  subset,
+		}, nil
 	}
 	if offset > 0 && limit == 0 {
-		return subset[offset:], nil
+		ret := subset[offset:]
+		return &PaginatedList{
+			Total:    total,
+			SubTotal: len(ret),
+			Results:  ret,
+		}, nil
 	}
-	return subset[offset:to], nil
+	ret := subset[offset:to]
+	return &PaginatedList{
+		Total:    total,
+		SubTotal: len(ret),
+		Results:  ret,
+	}, nil
 }
 
 func (store *PaymentInMemStore) GetByID(id uuid.UUID) (*Payment, error) {

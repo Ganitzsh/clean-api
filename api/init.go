@@ -123,7 +123,7 @@ func InitStore() {
 		store = NewPaymentInMemStore()
 		break
 	case DatabaseTypeMongo:
-		logrus.Info("Loding MongoDB store")
+		logrus.Info("Loading MongoDB store")
 		initMongo()
 		break
 	default:
