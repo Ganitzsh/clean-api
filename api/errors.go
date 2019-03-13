@@ -5,12 +5,14 @@ import (
 	"net/http"
 )
 
+type ErrorCode string
+
 type APIError struct {
-	DataError  bool   `json:"-"`
-	Message    string `json:"error"`
-	StatusCode int    `json:"-"`
-	AppCode    string `json:"code,omitempty"`
-	Err        error  `json:"-"`
+	DataError  bool      `json:"-"`
+	Message    string    `json:"error"`
+	StatusCode int       `json:"-"`
+	AppCode    ErrorCode `json:"code,omitempty"`
+	Err        error     `json:"-"`
 }
 
 func (e APIError) Error() string {
@@ -32,12 +34,20 @@ func NewAPIError(dataError bool, message string) *APIError {
 	}
 }
 
+const (
+	ErrorCodeInternalError  ErrorCode = "internal_error"
+	ErrorCodeNotImplemented ErrorCode = "not_implemented"
+	ErrorCodeMaintainance   ErrorCode = "undergoing_maintenance"
+	ErrorCodeNotFound       ErrorCode = "not_found"
+	ErrorCodeInvalidInput   ErrorCode = "invalid_input"
+)
+
 func ErrSomethingWentWrong(err error) *APIError {
 	return &APIError{
 		Message:    "Something went wrong",
 		Err:        err,
 		StatusCode: http.StatusInternalServerError,
-		AppCode:    "internal_error",
+		AppCode:    ErrorCodeInternalError,
 		DataError:  false,
 	}
 }
@@ -52,19 +62,19 @@ var (
 	ErrAPIMaintainance = &APIError{
 		Message:    "Maintenance is being done on the API",
 		StatusCode: http.StatusServiceUnavailable,
-		AppCode:    "undergoing_maintenance",
+		AppCode:    ErrorCodeMaintainance,
 		DataError:  false,
 	}
 	ErrNotFound = &APIError{
 		Message:    "Not found",
 		StatusCode: http.StatusNotFound,
-		AppCode:    "not_found",
+		AppCode:    ErrorCodeNotFound,
 		DataError:  false,
 	}
 	ErrInvalidInput = &APIError{
 		Message:    "Invalid input",
 		StatusCode: http.StatusBadRequest,
-		AppCode:    "invalid_input",
+		AppCode:    ErrorCodeInvalidInput,
 		DataError:  true,
 	}
 

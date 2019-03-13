@@ -17,7 +17,7 @@ func init() {
 	api.InitConfig()
 }
 
-func readErrorCode(body []byte) string {
+func readErrorCode(body []byte) api.ErrorCode {
 	if body == nil || len(body) == 0 {
 		return ""
 	}
@@ -113,7 +113,7 @@ func testSavePayment(db *mockDB) func(*testing.T) {
 		resp = doHTTPReq(handler, http.MethodPost, "/payments", string(b))
 		body, _ = ioutil.ReadAll(resp.Body)
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
-		assert.Equal(t, "", readErrorCode(body))
+		assert.Equal(t, api.ErrorCode(""), readErrorCode(body))
 		p := api.JSENDData{Data: new(api.Payment)}
 		if !assert.NoError(t, json.Unmarshal(body, &p)) {
 			t.FailNow()
@@ -129,7 +129,7 @@ func testSavePayment(db *mockDB) func(*testing.T) {
 		resp = doHTTPReq(handler, http.MethodPost, "/payments/"+id.String(), string(b))
 		body, _ = ioutil.ReadAll(resp.Body)
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
-		assert.Equal(t, "", readErrorCode(body))
+		assert.Equal(t, api.ErrorCode(""), readErrorCode(body))
 		p = api.JSENDData{Data: new(api.Payment)}
 		if !assert.NoError(t, json.Unmarshal(body, &p)) {
 			t.FailNow()

@@ -7,6 +7,8 @@ import (
 	"github.com/google/uuid"
 )
 
+// This is an implementation of PaymentStore with temporary in memory storage
+
 type PaymentInMemStore struct {
 	Database []*Payment
 }

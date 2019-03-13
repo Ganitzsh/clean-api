@@ -6,6 +6,8 @@ import (
 	"github.com/go-chi/render"
 )
 
+// The API uses the JSEND scheme to communicate with the clients
+
 const (
 	JSENDDataStatusSuccess = "success"
 	JSENDDataStatusFail    = "fail"

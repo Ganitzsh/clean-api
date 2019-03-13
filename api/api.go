@@ -25,14 +25,37 @@ var (
 	store        PaymentStore
 )
 
+// NotFound is the default handler that is called when an unknown route is
+// called. It will return the following body:
+//   {
+//     "data": {
+//       "error": "Not found",
+//       "code": "not_found"
+//     },
+//     "code": 404,
+//     "status": "error"
+//   }
 func NotFound(w http.ResponseWriter, r *http.Request) {
 	render.Render(w, r, NewJSENDData(ErrNotFound))
 }
 
+// Ping is a simple route that will return 204 No Content in case everything
+// is working fine
 func Ping(w http.ResponseWriter, r *http.Request) {
 	render.NoContent(w, r)
 }
 
+// datasourceHealthy is a middleware aiming on blocking the api calls if the
+// data source is not healthy: If it's not healthy it will return the following
+// body:
+//   {
+//     "data": {
+//       "error": "Maintenance is being done on the API",
+//       "code": "undergoing_maintenance"
+//     },
+//     "code": 503,
+//     "status": "error"
+//   }
 func datasourceHealthy(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch config.DBType {
@@ -46,6 +69,10 @@ func datasourceHealthy(next http.Handler) http.Handler {
 	})
 }
 
+// paymentContext is a middleware that will try to fetch the payment from the
+// data source and inject it in the request's context.
+//
+// On failure it will stop the chain and return the error in the body.
 func paymentContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		paymentID, err := uuid.Parse(chi.URLParam(r, "paymentID"))
@@ -63,6 +90,7 @@ func paymentContext(next http.Handler) http.Handler {
 	})
 }
 
+// ListPayments returns a list of payments with the given params of the request
 func ListPayments(w http.ResponseWriter, r *http.Request) {
 	limit, offset := readLimOff(r)
 	ret, err := store.GetMany(limit, offset)
@@ -73,6 +101,7 @@ func ListPayments(w http.ResponseWriter, r *http.Request) {
 	render.Render(w, r, NewJSENDData(ret, http.StatusOK))
 }
 
+// GetPayment will return a single payment
 func GetPayment(w http.ResponseWriter, r *http.Request) {
 	render.Render(w, r, NewJSENDData(
 		r.Context().Value("payment"),
@@ -80,6 +109,7 @@ func GetPayment(w http.ResponseWriter, r *http.Request) {
 	))
 }
 
+// SavePaymentReq is the payload for a payment creation request
 type SavePaymentReq struct {
 	*Payment
 }
@@ -93,6 +123,8 @@ func (p *SavePaymentReq) Bind(req *http.Request) error {
 	return nil
 }
 
+// SavePayment will read the request's body and create a new payment in the
+// data source
 func SavePayment(w http.ResponseWriter, r *http.Request) {
 	var payment *Payment
 	p := NewSavePaymentReq()
@@ -114,6 +146,7 @@ func SavePayment(w http.ResponseWriter, r *http.Request) {
 	render.Render(w, r, NewJSENDData(p))
 }
 
+// DeletePayment removes a payment from the datasource
 func DeletePayment(w http.ResponseWriter, r *http.Request) {
 	payment := r.Context().Value("payment").(*Payment)
 	if err := store.Delete(payment.ID); err != nil {
@@ -123,6 +156,7 @@ func DeletePayment(w http.ResponseWriter, r *http.Request) {
 	render.NoContent(w, r)
 }
 
+// Routes initializes the multiplexer and returns the http.Handler
 func Routes() http.Handler {
 	r := chi.NewRouter()
 	cors := cors.New(cors.Options{
@@ -156,6 +190,7 @@ func Routes() http.Handler {
 	return r
 }
 
+// Start wil take care of creating and starting the server with the given config
 func Start() error {
 	srv := http.Server{
 		Addr:    config.GetFullHost(),

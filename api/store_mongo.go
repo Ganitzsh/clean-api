@@ -9,6 +9,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// This is an implementation of PaymentStore backed by MongoDB
+
 // MongoQuery interfaces the *mgo.Query type
 type MongoQuery interface {
 	All(result interface{}) error
