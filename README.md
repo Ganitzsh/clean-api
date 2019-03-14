@@ -10,7 +10,11 @@ It will start listening on port 8080, or fail if this port is already in use.
 
 ## Configuration
 
-This program accepts YAML, JSON or XML configuration file.
+This program accepts YAML or JSON configuration file, it should be placed
+at the root of the app directory with the following name: `config.json` or
+`config.yml`.
+
+NOTE: Support for flag will be added
 
 Here is an example:
 
@@ -46,6 +50,23 @@ Here is an example:
         database: api
         collection: payments
         uri: user:password@localhost
+
+### Environment variable
+
+It also supports the following environment variable:
+
+  - API_DEV_MODE: `bool`
+  - API_TLS_ENABLED: `bool`
+  - API_TLS_KEY: path to key file
+  - API_TLS_CERT: path to cert file
+  - API_CORS_ORIGINS: `CSV`
+  - API_CORS_HEADERS: `CSV`
+  - API_CORS_METHODS: `CSV`
+  - API_DATABASE_TYPE: `mongo` | `inmem`
+  - API_DATABASE_MONGO_DATABASE: `string`
+  - API_DATABASE_MONGO_COLLECTION: `string`
+  - API_DATABASE_MONGO_URI: `string`
+
 
 ## Storage
 

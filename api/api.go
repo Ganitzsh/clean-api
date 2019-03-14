@@ -250,7 +250,8 @@ func Routes() http.Handler {
 			MaxAge:           300,
 		})
 		r.Use(cors.Handler)
-		if !config.DevMode {
+		if config.DevMode {
+			logrus.Info("Dev mode enabled")
 			r.Use(middleware.Logger)
 		}
 	}
