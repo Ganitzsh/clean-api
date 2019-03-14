@@ -2,9 +2,13 @@
 
 // Package api Payment API.
 //
+// This package contains all the realated features af the API. Which includes
+// the logic, the data layer and the controllers.
+//
 // Terms Of Service:
 //
-// there are no TOS at this moment, use at your own risk we take no responsibility
+// There are no TOS at this moment, use at your own risk we take no
+// responsibility
 //
 //     Schemes: http, https
 //     Host: localhost

@@ -1,4 +1,12 @@
-package api
+//go:generate swagger generate spec
+
+// Package doc contains the swagger definition struct. It is not intended to
+// be used at runtime and is dedicated to the generation of the specs
+package doc
+
+import "github.com/ganitzsh/f3-te/api"
+
+// This File contains structures me
 
 // A PaymentID parameter model.
 //
@@ -16,9 +24,9 @@ type paymentID struct {
 type paymentList struct {
 	// in: body
 	Body struct {
-		Results  []Payment `json:"results"`
-		Total    int       `json:"total"`
-		SubTotal int       `json:"subTotal"`
+		Results  []api.Payment `json:"results"`
+		Total    int           `json:"total"`
+		SubTotal int           `json:"subTotal"`
 	}
 }
 
@@ -26,7 +34,7 @@ type paymentList struct {
 type reqError struct {
 	// in: body
 	Body struct {
-		APIError
+		api.APIError
 	}
 }
 
@@ -34,6 +42,6 @@ type reqError struct {
 type singlePayment struct {
 	// in: body
 	Body struct {
-		Payment
+		api.Payment
 	}
 }
