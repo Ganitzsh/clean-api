@@ -1,14 +1,14 @@
 dev_mode: false
 tls:
-  enabled: true
+  enabled: false
   key:     "tls_test/key.pem"
   cert:    "tls_test/certificate.pem"
 
 cors:
   origins:
-    - http://localhost
+    - '*'
   headers:
-    - "*"
+    - '*'
   methods:
     - GET
     - POST
@@ -20,4 +20,4 @@ database:
   mongo:
     database: api
     collection: payments
-    uri: user:!PassWD!@localhost
+    uri: user:password@localhost

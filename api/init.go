@@ -109,6 +109,7 @@ func initMongo() {
 			store = NewPaymentMongoStore(c)
 			break
 		}
+		time.Sleep(2 * time.Second)
 	}
 	logrus.Info("Mongo: ready")
 }
