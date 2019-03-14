@@ -162,8 +162,9 @@ available and must be placed un the query (e.g: `/payments?lim=10&page=2`):
 
 -   `lim`: The maximum amount of resource to return
 -   `off`: The offset after which you'd like to start
--   `page`: The page number wanted, works with `lim` ? 0 otherwise it's ignored.
-    If `off` is also specified, `page` will be ignored
+-   `page`: The page number wanted, works with `lim` only if `lime` is > 0
+otherwise it's ignored. If `off` is also specified, `page` will be ignored and
+`off` will be used.
 
 ##### Payload
 
