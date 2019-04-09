@@ -1,5 +1,8 @@
 # Payment API
 
+This project is a simple API that is more like a playground for me than anything.
+The purpose is to implement a clean architecture, well tested and easy to use.
+
 ## Getting started
 
 You can start the api with the default configuration like this
