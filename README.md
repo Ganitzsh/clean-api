@@ -8,6 +8,12 @@ You can start the api with the default configuration like this
 
 It will start listening on port 8080, or fail if this port is already in use.
 
+## Testing
+
+Tests can be run like this
+
+    go test ./...
+
 ## Configuration
 
 This program accepts YAML or JSON configuration file, it should be placed
@@ -74,6 +80,9 @@ Two different storage types are available:
 
 -   `inmem`: in memory storage, no persistency
 -   `mongo`: a MongoDB storage
+
+The API will use `inmem` by default if no mongo configuration is given.
+This storage is not persistent and will disappear when the program will exit.
 
 ## API
 
